@@ -123,24 +123,23 @@ export default class MidiListener {
   private handleMidiMessage(message: MIDIMessageEvent) {
     const parse = this.parseMidiMessage(message)
     const {data, command, channel, note, velocity} = parse
+
     this.onParse(parse)
 
-    // Stop command.
-    // Negative velocity is an upward release rather than a downward press.
-    if (command === 8) {
-      if      (channel === 0) this.onNote(note, -velocity)
-      else if (channel === 9) this.onPad(note, -velocity)
-    }
-
-    // Start command.
-    else if (command === 9) {
-      if      (channel === 0) this.onNote(note, velocity)
-      else if (channel === 9) this.onPad(note, velocity)
+    // Start/stop commands.
+    //  - Positive velocity is a downward press.
+    //  - Negative (or zero) velocity is an upward release.
+    if (command === 8 || command === 9) {
+      if (channel === 0 || channel === 15)
+        this.onNote(note, command === 9 ? velocity : -velocity)
+      else if (channel === 9)
+        this.onPad(note, command === 9 ? velocity : -velocity)
     }
 
     // Knob command.
     else if (command === 11) {
-      if (note === 1) this.onModWheel(velocity)
+      if (note === 1)
+        this.onModWheel(velocity)
     }
 
     // Pitch bend command.
