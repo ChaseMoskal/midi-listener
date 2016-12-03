@@ -1,6 +1,6 @@
 {
   "name": "midi-listener",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Listen for and interpret MIDI device input",
   "main": "build/MidiListener.js",
   "types": "build/MidiListener.d.ts",
@@ -15,8 +15,8 @@
     "url": "https://github.com/ChaseMoskal/midi-listener.git"
   },
   "devDependencies": {
-    "@types/core-js": "*",
-    "rimraf": "*",
-    "typescript": "^2.1"
+    "@types/core-js": "^0.9.35",
+    "rimraf": "^2.5.4",
+    "typescript": "^2.1.1"
   }
 }
