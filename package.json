@@ -1,6 +1,6 @@
 {
   "name": "midi-listener",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Listen for and interpret MIDI device input",
   "main": "build/MidiListener.js",
   "types": "build/MidiListener.d.ts",

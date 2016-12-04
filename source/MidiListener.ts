@@ -1,6 +1,17 @@
 
 /// <reference types="typescript"/>
 
+import {
+  InputChangeReport,
+  MessageReport,
+  NoteReport,
+  PadReport,
+  PitchBendReport,
+  ModWheelReport
+} from "./reports"
+
+export * from "./reports"
+
 /**
  * Options for creating a midi listener.
  * Contains midi access object, and callbacks for handling midi events.
@@ -11,33 +22,22 @@ export interface MidiListenerOptions {
   access: MIDIAccess
 
   /** MIDI input device is connected or disconnected, and also initially. */
-  onInputChange?: (inputNames: string[]) => void
+  onInputChange?: (report: InputChangeReport) => void
 
   /** Message event is received from any MIDI input. */
-  onParse?: (message: MidiListenerParse) => void
+  onMessage?: (report: MessageReport) => void
 
-  /** Note is pressed or released. Notes with zero or negative velocity are being released. */
-  onNote?: (note: number, velocity: number) => void
+  /** Note is pressed or released. */
+  onNote?: (report: NoteReport) => void
 
-  /** Tap pads are hit or released. Taps with zero or negative velocity are being released. */
-  onPad?: (pad: number, velocity: number) => void
+  /** Tap pad is pressed or released. */
+  onPad?: (report: PadReport) => void
 
-  /** Pitch wheel is moved. */
-  onPitchBend?: (value: number) => void
+  /** Pitch wheel is adjusted. */
+  onPitchBend?: (report: PitchBendReport) => void
 
-  /** Mod wheel is moved. */
-  onModWheel?: (value: number) => void
-}
-
-/**
- * Packet of information received from MIDI input and parsed by the MidiListener.
- */
-export interface MidiListenerParse {
-  data: Uint8Array
-  command: number
-  channel: number
-  note: number
-  velocity: number
+  /** Mod wheel is adjusted. */
+  onModWheel?: (report: ModWheelReport) => void
 }
 
 /**
@@ -45,23 +45,24 @@ export interface MidiListenerParse {
  */
 export default class MidiListener {
   private readonly access: MIDIAccess
-  private readonly onInputChange: (inputNames: string[]) => void
-  private readonly onParse: (message: MidiListenerParse) => void
-  private readonly onNote: (noteNumber: number, velocity: number) => void
-  private readonly onPad: (pad: number, velocity: number) => void
-  private readonly onPitchBend: (value: number) => void
-  private readonly onModWheel: (value: number) => void
+  private readonly onInputChange: (report: InputChangeReport) => void
+  private readonly onMessage: (report: MessageReport) => void
+  private readonly onNote: (report: NoteReport) => void
+  private readonly onPad: (report: PadReport) => void
+  private readonly onPitchBend: (report: PitchBendReport) => void
+  private readonly onModWheel: (report: ModWheelReport) => void
   private numberOfOpenConnections: number
 
   /**
    * Create a MIDI Listener.
+   * Provide MIDI access, and callbacks for MIDI events.
    */
   constructor(options: MidiListenerOptions) {
     this.access = options.access
 
     const noop = () => {}
     this.onInputChange = options.onInputChange || noop
-    this.onParse = options.onParse || noop
+    this.onMessage = options.onMessage || noop
     this.onNote = options.onNote || noop
     this.onPad = options.onPad || noop
     this.onPitchBend = options.onPitchBend || noop
@@ -97,7 +98,7 @@ export default class MidiListener {
     if (numberOfOpenConnections !== this.numberOfOpenConnections) {
 
       // Call the input change callback.
-      this.onInputChange(inputNames)
+      this.onInputChange({inputNames})
 
       // Update the number of connected inputs.
       this.numberOfOpenConnections = numberOfOpenConnections
@@ -107,44 +108,60 @@ export default class MidiListener {
   /**
    * Parse a MIDI message into useful information.
    */
-  private parseMidiMessage(message: MIDIMessageEvent) {
+  private parseMidiMessage(message: MIDIMessageEvent): MessageReport {
     return {
       data: message.data,
       command: message.data[0] >> 4,
       channel: message.data[0] & 0xf,
-      note: message.data[1],
-      velocity: message.data[2] / 127
+      code: message.data[1],
+      value: message.data[2] / 127
     }
   }
 
   /**
-   * Handle a message from a MIDI input.
+   * Convert note code number into frequency, in hertz.
    */
-  private handleMidiMessage(message: MIDIMessageEvent) {
-    const parse = this.parseMidiMessage(message)
-    const {data, command, channel, note, velocity} = parse
+  private noteCodeToFrequency(code: number) {
+    return 440 * Math.pow(2, (code - 69) / 12)
+  }
 
-    this.onParse(parse)
+  /**
+   * Handle a MIDI input message.
+   * Parse the MIDI message into a 
+   * Interpret 
+   */
+  private handleMidiMessage(midiMessage: MIDIMessageEvent) {
+    const messageReport = this.parseMidiMessage(midiMessage)
+    const {data, command, channel, code, value} = messageReport
+    this.onMessage(messageReport)
 
     // Start/stop commands.
-    //  - Positive velocity is a downward press.
-    //  - Negative (or zero) velocity is an upward release.
     if (command === 8 || command === 9) {
+      const isStopCommand = command === 9
+      const velocity = isStopCommand ? value : -value
+
+      // Key note channels.
       if (channel === 0 || channel === 15)
-        this.onNote(note, command === 9 ? velocity : -velocity)
+        this.onNote({
+          code,
+          velocity,
+          frequency: this.noteCodeToFrequency(code)
+        })
+
+      // Pad channel.
       else if (channel === 9)
-        this.onPad(note, command === 9 ? velocity : -velocity)
+        this.onPad({code, velocity})
     }
 
     // Knob command.
     else if (command === 11) {
-      if (note === 1)
-        this.onModWheel(velocity)
+      if (code === 1)
+        this.onModWheel({value})
     }
 
     // Pitch bend command.
     else if (command === 14) {
-      this.onPitchBend(velocity)
+      this.onPitchBend({value})
     }
   }
 }

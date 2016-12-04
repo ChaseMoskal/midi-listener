@@ -1,11 +1,6 @@
 
 # MIDI LISTENER — CHANGELOG
 
-## [0.0.2] - 2016-12-03
-Fixed package.json.
+Still in pre-release.
 
-## [0.0.1] - 2016-12-03
-Improve midi message handling logic.
-
-## [0.0.0] - 2016-12-03
-Initial version.
+Not keeping a changelog until v1.0.

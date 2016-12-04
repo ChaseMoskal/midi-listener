@@ -2,42 +2,43 @@
 MIDI LISTENER
 =============
 
-  - Listen for and interpret MIDI device input.
-  - Listens to all connected MIDI devices simultaneously. Simple.
-  - Largely inspired by [the stack overflow post](http://stackoverflow.com/questions/40902864/how-to-parse-web-midi-api-input-messages-onmidimessage)
+***This project is early WIP pre-release code.*** *Open to suggestions or comments, please submit an issue!*
 
-Use it with your slick TypeScript 2.1 project:
-----------------------------------------------
+Listen for and interpret MIDI device input.
+
+  - Simply listens to all connected MIDI devices simultaneously
+  - Written in TypeScript
+  - Inspired by [the stack overflow post](http://stackoverflow.com/questions/40902864/how-to-parse-web-midi-api-input-messages-onmidimessage)
+  - Published an an [npm package](https://www.npmjs.com/package/midi-listener)
+  - Usage example: [the CSM repository](https://github.com/ChaseMoskal/csm)
+
+Basic usage with your TypeScript project:
+-----------------------------------------
 
 ### Install midi-listener:
 
     npm install --save midi-listener
 
-### At the top of your `.ts` module:
+### Reference the Web MIDI API declarations:
+
+    /// <reference path="../node_modules/midi-listener/source/web-midi.d.ts"/>
+
+### Import into your code and use
 
 ```typescript
-// Bring in definitions for the Web MIDI API.
-/// <reference types="./node_modules/midi-listener/source/web-midi.d.ts"/>
-
-// Import the midi listener.
 import MidiListener from "midi-listener"
 
-// Async/await function — because you're a badass.
 (async function() {
 
-  // Create a midi listener.
-  const midiListener = new MidiListener({
-
-    // Pass the midi access object from the Web MIDI API.
+  new MidiListener({
     access: await navigator.requestMIDIAccess(),
-
-    // Assign callbacks for handling meaningful midi events.
-    onInputChange: inputs => console.debug(`MIDI inputs: [${inputs.join(", ")}]`),
-    onParse: parse => console.debug(`MIDI message parse:`, parse),
-    onNote: (note, velocity) => console.log(` - Note:`, note, ',', velocity.toFixed(2)),
-    onPad: (pad, velocity) => console.log(` - Pad:`, pad, ',', velocity.toFixed(2)),
-    onPitchBend: value => console.log(` - Pitch bend:`, value.toFixed(2)),
-    onModWheel: value => console.log(` - Mod wheel:`, value.toFixed(2))
+    onInputChange: report => console.log("MIDI Input Change:", report.inputNames),
+    onMessage: report => console.log("MIDI Message:", report),
+    onNote: report => console.log(" - Note:", report),
+    onPad: report => console.log(" - Pad:", report),
+    onPitchBend: report => console.log(" - Pitch bend:", report),
+    onModWheel: report => console.log(" - Mod wheel:", report)
   })
+
 })()
 ```
