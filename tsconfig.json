@@ -1,14 +1,15 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
-    "module": "commonjs",
     "target": "es5",
-    "moduleResolution": "node",
-    "baseUrl": ".",
+    "module": "commonjs",
     "rootDir": "source",
     "outDir": "build",
-    "paths": {},
+    "baseUrl": ".",
     "sourceMap": true,
-    "declaration": true
+    "declaration": true,
+    "lib": ["dom", "es2015"],
+    "moduleResolution": "node",
+    "paths": {}
   }
 }
