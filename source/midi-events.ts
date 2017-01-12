@@ -1,5 +1,24 @@
 
 /**
+ * Generic midi event callbacks.
+ * These callbacks might be invoked by a midi listener, or maybe something emulating/spoofing a midi listener (like perhaps a visual GUI keyboard).
+ */
+export interface MidiEventCallbacks {
+
+  /** Note is pressed or released. */
+  onNote?: (report: NoteReport) => void
+
+  /** Tap pad is pressed or released. */
+  onPad?: (report: PadReport) => void
+
+  /** Pitch wheel is adjusted. */
+  onPitchBend?: (report: PitchBendReport) => void
+
+  /** Mod wheel is adjusted. */
+  onModWheel?: (report: ModWheelReport) => void
+}
+
+/**
  * Report of change to connected MIDI inputs.
  */
 export interface InputChangeReport {

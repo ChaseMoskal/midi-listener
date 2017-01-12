@@ -9,7 +9,7 @@ Listen for and interpret MIDI device input.
   - Simply listens to all connected MIDI devices simultaneously
   - Written in TypeScript
   - Inspired by [the stack overflow post](http://stackoverflow.com/questions/40902864/how-to-parse-web-midi-api-input-messages-onmidimessage)
-  - Published an an [npm package](https://www.npmjs.com/package/midi-listener)
+  - Published as an [npm package](https://www.npmjs.com/package/midi-listener)
   - Usage example: [the CSM repository](https://github.com/ChaseMoskal/csm)
 
 Basic usage with your TypeScript project:
@@ -28,17 +28,21 @@ Basic usage with your TypeScript project:
 ```typescript
 import MidiListener from "midi-listener"
 
-(async function() {
+(async () => {
 
-  new MidiListener({
-    access: await navigator.requestMIDIAccess(),
-    onInputChange: report => console.log("MIDI Input Change:", report.inputNames),
-    onMessage: report => console.log("MIDI Message:", report),
-    onNote: report => console.log(" - Note:", report),
-    onPad: report => console.log(" - Pad:", report),
-    onPitchBend: report => console.log(" - Pitch bend:", report),
-    onModWheel: report => console.log(" - Mod wheel:", report)
+  // Create the midi listener.
+  const midiListener = new MidiListener({
+    access: await navigator.requestMIDIAccess()
   })
 
+  // Subscribe to the midi listener's events with callbacks.
+  midiListener.subscribe({
+    onInputChange: report => console.log("MIDI Input Change:", report.inputNames),
+    onMessage:     report => console.log("MIDI Message:", report),
+    onNote:        report => console.log(" - Note:", report),
+    onPad:         report => console.log(" - Pad:", report),
+    onPitchBend:   report => console.log(" - Pitch bend:", report),
+    onModWheel:    report => console.log(" - Mod wheel:", report)
+  })
 })()
 ```
